@@ -5,76 +5,43 @@ using UnityEngine;
 public class EnemyMove : MonoBehaviour
 {
     [SerializeField]
-    private WaypointPath m_Path;
-
-    [SerializeField]
     private float m_MoveSpeed = 3f;
 
-    private int m_CurrentIndex = 0;
+    private WaypointPath m_Path;
+    private int m_CurrentIndex;
+    private Transform m_Target;
 
-    private Transform m_CurrentTarget;
-
-    private void Start()
+    // DungeonManager에서 반드시 호출
+    public void Initialize(WaypointPath path)
     {
-        InitializePath();
+        m_Path = path;
+        m_CurrentIndex = 0;
+        m_Target = m_Path.GetPoint(m_CurrentIndex);
     }
 
     private void Update()
     {
-        if (m_CurrentTarget == null)
+        if (m_Target == null)
             return;
 
-        if (IsArrivedAtTarget())
+        Vector3 dir = m_Target.position - transform.position;
+        transform.position += dir.normalized * m_MoveSpeed * Time.deltaTime;
+
+        if (dir.sqrMagnitude < 0.05f)
         {
-            SetNextTarget();
-            return;
+            MoveNext();
         }
-
-        MoveToTarget();
     }
 
-    private void InitializePath()
-    {
-        if (m_Path == null || m_Path.Count == 0)
-            return;
-
-        m_CurrentIndex = 0;
-        m_CurrentTarget = m_Path.GetPoint(m_CurrentIndex);
-        transform.position = m_CurrentTarget.position;
-        SetNextTarget();
-    }
-
-    private void MoveToTarget()
-    {
-        Vector3 direction = m_CurrentTarget.position - transform.position;
-        direction.y = 0f;
-
-        transform.position += direction.normalized * m_MoveSpeed * Time.deltaTime;
-    }
-
-    private bool IsArrivedAtTarget()
-    {
-        float sqrDistance =
-            (m_CurrentTarget.position - transform.position).sqrMagnitude;
-
-        return sqrDistance < 0.01f;
-    }
-
-    private void SetNextTarget()
+    private void MoveNext()
     {
         m_CurrentIndex++;
+        m_Target = m_Path.GetPoint(m_CurrentIndex);
 
-        if (m_CurrentIndex >= m_Path.Count)
+        if (m_Target == null)
         {
-            ReachGoal();
-            return;
+            DungeonManager.Instance.OnEnemyReachedGoal();
+            Destroy(gameObject);
         }
-
-        m_CurrentTarget = m_Path.GetPoint(m_CurrentIndex);
-    }
-    private void ReachGoal()
-    {
-        Debug.Log("Enemy reached goal");
-        Destroy(gameObject);
     }
 }

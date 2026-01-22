@@ -907,6 +907,7 @@ MonoBehaviour:
   m_PoolSettings:
   - prefab: {fileID: 8953997814047426897, guid: fea41042eb40ba442a4093917364105f, type: 3}
     prewarmCount: 20
+  m_Enemys: {fileID: 356931727}
 --- !u!4 &1291522951
 Transform:
   m_ObjectHideFlags: 0

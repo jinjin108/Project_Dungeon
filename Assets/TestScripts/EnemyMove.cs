@@ -1,4 +1,4 @@
-using System.Collections;
+Ôªøusing System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,39 +9,55 @@ public class EnemyMove : MonoBehaviour
 
     private WaypointPath m_Path;
     private int m_CurrentIndex;
-    private Transform m_Target;
+    private bool m_IsMoving;
 
-    // DungeonManagerø°º≠ π›µÂΩ√ »£√‚
-    public void Initialize(WaypointPath path)
+    public void SetPath(WaypointPath path)
     {
         m_Path = path;
         m_CurrentIndex = 0;
-        m_Target = m_Path.GetPoint(m_CurrentIndex);
+        m_IsMoving = true;
+
+        transform.position = m_Path.GetPoint(0).position;
     }
 
     private void Update()
     {
-        if (m_Target == null)
+        if (!m_IsMoving || m_Path == null)
             return;
 
-        Vector3 dir = m_Target.position - transform.position;
-        transform.position += dir.normalized * m_MoveSpeed * Time.deltaTime;
-
-        if (dir.sqrMagnitude < 0.05f)
-        {
-            MoveNext();
-        }
+        MoveToWaypoint();
     }
 
-    private void MoveNext()
+    private void MoveToWaypoint()
     {
-        m_CurrentIndex++;
-        m_Target = m_Path.GetPoint(m_CurrentIndex);
+        Transform target = m_Path.GetPoint(m_CurrentIndex);
+        if (target == null)
+            return;
 
-        if (m_Target == null)
+        Vector3 dir = target.position - transform.position;
+        float distance = dir.magnitude;
+
+        if (distance < 0.1f)
         {
-            DungeonManager.Instance.OnEnemyReachedGoal();
-            Destroy(gameObject);
+            m_CurrentIndex++;
+
+            if (m_CurrentIndex >= m_Path.Count)
+            {
+                m_IsMoving = false;
+                EnemyArrived();
+            }
+
+            return;
         }
+
+        transform.position += dir.normalized * m_MoveSpeed * Time.deltaTime;
+    }
+
+    private void EnemyArrived()
+    {
+        Enemy enemy = GetComponent<Enemy>();
+
+        EventManager.RaiseEnemyArrived(enemy);
+        ObjectPool.Instance.Return(this);
     }
 }

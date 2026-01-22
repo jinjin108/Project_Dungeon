@@ -1,42 +1,51 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class DungeonManager : MonoBehaviour
 {
-    private static DungeonManager instance;
-    public static DungeonManager Instance => instance;
+    private static DungeonManager m_Instance;
+    public static DungeonManager Instance => m_Instance;
 
     [SerializeField]
-    private WaypointPath m_WaypointPath;
-
-    [SerializeField]
-    private GameObject m_EnemyPrefab;
+    private Player m_Player;
 
     private void Awake()
     {
-        if (instance != null)
+        if (m_Instance != null)
         {
             Destroy(gameObject);
             return;
         }
-        instance = this;
+
+        m_Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
-    private void Start()
+    private void OnEnable()
     {
-        SpawnEnemy();
+        EventManager.OnEnemyArrived += HandleEnemyArrived;
+        EventManager.OnPlayerDead += HandlePlayerDead;
     }
 
-    public void SpawnEnemy()
+    private void OnDisable()
     {
-        GameObject enemyObj = Instantiate(m_EnemyPrefab);
-        Enemy enemy = enemyObj.GetComponent<Enemy>();
-        enemy.Initialize(m_WaypointPath);
+        EventManager.OnEnemyArrived -= HandleEnemyArrived;
+        EventManager.OnPlayerDead -= HandlePlayerDead;
     }
 
-    public void OnEnemyReachedGoal()
+    private void HandleEnemyArrived(Enemy enemy)
     {
-        Debug.Log("Enemy reached goal");
+        m_Player.TakeDamage(1);
+    }
+
+    private void HandlePlayerDead()
+    {
+        Debug.Log("Game Over");
+        // 이후:
+        // - 웨이브 정지
+        // - UI 표시
+        // - 재시작 처리
     }
 }
+

@@ -13,6 +13,6 @@ public class Enemy : MonoBehaviour
 
     public void Initialize(WaypointPath path)
     {
-        m_Move.Initialize(path);
+        m_Move.SetPath(path);
     }
 }
